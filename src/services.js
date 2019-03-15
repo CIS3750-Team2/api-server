@@ -1,17 +1,22 @@
 module.exports = {
     default: {
-        data_ttl_ms: 24 * 60 * 60 * 1000
+        ttl: 24 * 60 * 60 * 1000
     },
-    ontario: {
-        enabled: true,
-        key: 'ontario'
-    },
-    alberta: {
-        enabled: false,
-        key: 'alberta'
-    },
-    quebec: {
-        enabled: false,
-        key: 'quebec'
-    }
+    services: [
+        {
+            province: 'ontario',
+            enabled: true,
+            years: [2017, 2016],
+        },
+        {
+            province: 'alberta',
+            enabled: false,
+            years: [2018],
+        },
+        {
+            province: 'quebec',
+            enabled: false,
+            years: [2018],
+        },
+    ]
 };
