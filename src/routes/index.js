@@ -15,8 +15,12 @@ module.exports = (app, db) => {
                     description: 'Main data route for this API. Used to query aggregated sunshine list data for Canada.',
                     methods: ['GET'],
                     parameters: {
-                        year: 'An integer denoting which year of sunshine data you want to receive, optional, defaults to all.',
-                        province: 'A string indicating the name of the province you want to receive, optional, defaults to all.'
+                        limit: 'integer - number of entries to return - optional, default: 10',
+                        start: 'integer - number of entries to skip before return limit entries - optional, default: 0',
+                        filter: 'object - filters to apply to query - optional, default: no filter',
+                        search: 'string - quick search to tokenize and filter entries with - optional, default: none',
+                        sortField: 'string - field to use for sorting - optional, default: "year"',
+                        sortOrder: '"ascending" | "descending" - order of entries to sort - optional, default: "descending"'
                     },
                     returns: 'A list of sunshine list entries specific to parameters'
                 }

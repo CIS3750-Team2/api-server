@@ -1,20 +1,53 @@
+const defaultQuery = {
+    limit: 10,
+    start: 0,
+
+    filter: {
+        provinces: require('../services').services.map(
+            ({ province }) => province.toLowerCase()
+        ),
+
+        minYear: undefined,
+        maxYear: undefined,
+        minSalary: undefined,
+        maxSalary: undefined,
+
+        textFilters: []
+    },
+
+    sortField: 'year',
+    sortOrder: 'descending'
+};
+
 module.exports = (app, db) => {
-    app.get('/sunshine', async (req, res) => {
-        let { year, province } = req.query;
+    const listHandler = async (req, res) => {
+        const {
+            limit,
+            start,
 
-        if (year) {
-            year = parseInt(year);
-            if (year < 0 || year > 3000) year = undefined;
-        }
+            filter,
+            search,
 
-        if (province && typeof province === 'string' && province.length > 0) {
-            province = province.toLowerCase();
-        } else {
-            province = undefined;
-        }
+            sortField,
+            sortOrder
+        } = req.query;
+
+        const query = {
+            limit: parseInt(limit) || defaultQuery.limit,
+            start: parseInt(start) || defaultQuery.start,
+
+            filter: {
+                ...defaultQuery.filter,
+                ...JSON.parse(filter || '{}')
+            },
+            search: search || defaultQuery.search,
+
+            sortField: sortField || defaultQuery.sortField,
+            sortOrder: sortOrder || defaultQuery.sortOrder
+        };
 
         try {
-            const result = await db.getList(year, province);
+            const result = await db.getList(query);
             res.status(200).json(result);
         } catch (err) {
             console.log(err);
@@ -23,5 +56,8 @@ module.exports = (app, db) => {
                 message: 'An error was encountered while trying to load the specified list of provincial data. Please try again.'
             });
         }
-    });
+    };
+
+    app.get('/sunshine/list', listHandler);
+    app.get('/sunshine', listHandler);
 };

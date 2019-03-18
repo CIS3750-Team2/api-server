@@ -2,28 +2,107 @@ const {MongoClient} = require('mongodb');
 
 const collectionName = 'sunshine_list';
 
+const textFilterTypes = {
+    includes: text => ({ $regex: text, $options: 'i' }),
+    not_includes: text => ({ $not: new RegExp(text, 'i') }),
+    matches: text => ({ $regex: `^${text}$`, $options: 'im' }),
+    not_matches: text => ({ $not: new RegExp(`^${text}$`, 'im') })
+};
+
+const toMongoQuery = ({ filter }) => {
+    const query = {};
+
+    if (filter) {
+        if (filter.provinces) {
+            query.province = {
+                $in: filter.provinces
+            };
+        }
+
+        if (filter.minYear || filter.maxYear) {
+            query.year = {};
+            if (filter.minYear) query.year['$gte'] = filter.minYear;
+            if (filter.maxYear) query.year['$lte'] = filter.maxYear;
+        }
+
+        if (filter.minSalary || filter.maxSalary) {
+            query.salary = {};
+            if (filter.minSalary) query.salary['$gte'] = filter.minSalary;
+            if (filter.maxSalary) query.salary['$lte'] = filter.maxSalary;
+        }
+
+        if (filter.textFilters) {
+            const expressions = filter.textFilters
+                .filter(({ type, field }) =>
+                    type != null
+                    && textFilterTypes[type]
+                    && field != null
+                    && field.length > 0
+                )
+                .map(({ type, field, text = '' }) => ({
+                    [field]: textFilterTypes[type.toLowerCase()](text)
+                }));
+
+            if (expressions.length > 0) query.$and = expressions;
+        }
+    }
+
+    return query;
+};
+
+const toMongoSort = ({ sortField, sortOrder }) => ({
+    [sortField]: (
+        sortOrder === 'asc'
+        || sortOrder === 'ascending'
+        || sortOrder === 1
+        || sortOrder === true
+    ) ? 1 : -1
+});
+
 module.exports = async (mongoUri) => {
+    console.log('Initializing database and generating indexes...');
     const db = (await MongoClient.connect(mongoUri, { useNewUrlParser: true })).db();
     const collection = db.collection(collectionName);
+    await collection.createIndex({ "$**": "text" });
 
     return {
         mongoUri,
         db,
         collection,
-        getList: async (year = null, province = null) => {
-            const query = {};
-            if (year != null && !isNaN(year)) query.year = year;
-            if (province != null && province.length > 0) {
-                query.province = province.toLowerCase();
-            }
+        getList: async ({ start, limit, search = '', ...query }) => {
+            const list = await (search.length === 0
+                ? collection
+                    .find(toMongoQuery(query))
+                    .sort(toMongoSort(query))
+                    .skip(start)
+                    .limit(limit)
+                    .toArray()
+                : collection
+                    .find({
+                        ...toMongoQuery(query),
+                        $text: {
+                            $search: search,
+                            $caseSensitive: false
+                        }
+                    }, { projection: { score: { $meta: 'textScore' } } })
+                    .sort({
+                        score: { $meta: 'textScore' },
+                        ...toMongoSort(query)
+                    })
+                    .skip(start)
+                    .limit(limit)
+                    .toArray()
+            );
 
-            return await collection.find(query, {
-                projection: { dataset: 0 }
-            }).toArray();
+            return list.map((entry) => ({
+                ...entry,
+                dataset: undefined,
+                score: undefined
+            }));
         },
-        addData: async (dataset, data = []) => {
+        addData: async (datasetName, data = []) => {
             if (!dataset || dataset.length === 0 || data.length === 0) return;
-            dataset = dataset.toLowerCase();
+            const dataset = datasetName.toLowerCase();
 
             await collection.bulkWrite([
                 {
