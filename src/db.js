@@ -40,8 +40,6 @@ module.exports = async (mongoUri) => {
                     }
                 }))
             ], { ordered: true });
-            // await collection.removeMany({ dataset });
-            // await collection.insertMany(data);
         }
     };
 };

@@ -17,9 +17,10 @@ module.exports = {
         },
         {
             province: 'alberta',
-            enabled: false,
+            enabled: true,
             years: [
-                2017
+                2017, 2016, 2015, 2014,
+                2013, 2012
             ],
         },
         {
