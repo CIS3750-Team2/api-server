@@ -32,13 +32,24 @@ module.exports = (app, db) => {
             sortOrder
         } = req.query;
 
+        const {
+            provinces,
+            minYear, maxYear,
+            minSalary, maxSalary,
+            textFilters
+        } = JSON.parse(filter || '{}') || {};
+
         const query = {
             limit: parseInt(limit) || defaultQuery.limit,
             start: parseInt(start) || defaultQuery.start,
 
             filter: {
-                ...defaultQuery.filter,
-                ...JSON.parse(filter || '{}')
+                provinces: provinces || defaultQuery.filter.provinces,
+                minYear: minYear && parseInt(minYear),
+                maxYear: maxYear && parseInt(maxYear),
+                minSalary: minSalary && parseInt(minSalary),
+                maxSalary: maxSalary && parseInt(maxSalary),
+                textFilters: textFilters || defaultQuery.filter.textFilters
             },
             search: search || defaultQuery.search,
 
