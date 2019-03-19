@@ -101,7 +101,7 @@ module.exports = async (mongoUri) => {
             }));
         },
         addData: async (datasetName, data = []) => {
-            if (!dataset || dataset.length === 0 || data.length === 0) return;
+            if (!datasetName || datasetName.length === 0 || data.length === 0) return;
             const dataset = datasetName.toLowerCase();
 
             await collection.bulkWrite([
