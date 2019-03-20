@@ -90,7 +90,12 @@ module.exports = (app, db) => {
         }
     };
 
+    const fieldsHandler = async (req, res) => {
+        res.status(200).json(db.getFields());
+    };
+
     app.get('/sunshine/list', listHandler);
     app.get('/sunshine/count', countHandler);
+    app.get('/sunshine/fields', fieldsHandler);
     app.get('/sunshine', listHandler);
 };

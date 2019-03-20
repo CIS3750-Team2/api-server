@@ -82,6 +82,14 @@ module.exports = async (mongoUri) => {
         db,
         collection,
         getCursor,
+        getFields: () => [
+            '_id',
+            'firstName', 'lastName',
+            'sector', 'salary', 'taxableBenefits',
+            'employer', 'title', 'province',
+            'year', 'positionClass', 'severance',
+            'original'
+        ],
         getList: async ({ start, limit, ...query }) => {
             const list = await (
                 !query.search || query.search.length === 0

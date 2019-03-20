@@ -37,6 +37,13 @@ module.exports = (app, db) => {
                         sortOrder: '"ascending" | "descending" - order of entries to sort - optional (ignored for count), default: "descending"'
                     },
                     returns: 'Total count of entries for the specified parameters'
+                },
+                sunshineFields: {
+                    endpoint: '/sunshine/fields',
+                    description: 'Provides a list of all field names that are used through the sunshine list entries.',
+                    methods: ['GET'],
+                    parameters: {},
+                    returns: 'A comprehensive list of fields used throughout the sunshine list data'
                 }
             }
         })
