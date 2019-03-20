@@ -81,6 +81,7 @@ module.exports = async (mongoUri) => {
         mongoUri,
         db,
         collection,
+        getCursor,
         getList: async ({ start, limit, ...query }) => {
             const list = await (
                 !query.search || query.search.length === 0
