@@ -10,8 +10,8 @@ module.exports = (app, db) => {
                     parameters: {},
                     returns: 'This page here.'
                 },
-                sunshine: {
-                    endpoint: '/sunshine',
+                sunshineList: {
+                    endpoint: '/sunshine/list',
                     description: 'Main data route for this API. Used to query aggregated sunshine list data for Canada.',
                     methods: ['GET'],
                     parameters: {
@@ -23,6 +23,9 @@ module.exports = (app, db) => {
                         sortOrder: '"ascending" | "descending" - order of entries to sort - optional, default: "descending"'
                     },
                     returns: 'A list of sunshine list entries specific to parameters'
+                },
+                sunshineCount: {
+                    endpoint: '/sunshine/count'
                 }
             }
         })

@@ -65,34 +65,31 @@ module.exports = async (mongoUri) => {
     const collection = db.collection(collectionName);
     await collection.createIndex({ "$**": "text" });
 
+    const getCursor = ({ search = '', ...query }) => (
+        search.length === 0
+            ? collection
+                .find(toMongoQuery(query))
+                .sort(toMongoSort(query))
+            : collection
+                .find({
+                    ...toMongoQuery(query),
+                    $text: {
+                        $search: search,
+                        $caseSensitive: false
+                    }
+                }, { projection: { score: { $meta: 'textScore' } } })
+                .sort({
+                    score: { $meta: 'textScore' },
+                    ...toMongoSort(query)
+                })
+    );
+
     return {
         mongoUri,
         db,
         collection,
-        getList: async ({ start, limit, search = '', ...query }) => {
-            const list = await (search.length === 0
-                ? collection
-                    .find(toMongoQuery(query))
-                    .sort(toMongoSort(query))
-                    .skip(start)
-                    .limit(limit)
-                    .toArray()
-                : collection
-                    .find({
-                        ...toMongoQuery(query),
-                        $text: {
-                            $search: search,
-                            $caseSensitive: false
-                        }
-                    }, { projection: { score: { $meta: 'textScore' } } })
-                    .sort({
-                        score: { $meta: 'textScore' },
-                        ...toMongoSort(query)
-                    })
-                    .skip(start)
-                    .limit(limit)
-                    .toArray()
-            );
+        getList: async ({ start, limit, ...query }) => {
+            const list = await getCursor(query).skip(start).limit(limit).toArray();
 
             return list.map((entry) => ({
                 ...entry,
@@ -100,6 +97,7 @@ module.exports = async (mongoUri) => {
                 score: undefined
             }));
         },
+        getCount: async (query) => await getCursor(query).count(),
         addData: async (datasetName, data = []) => {
             if (!datasetName || datasetName.length === 0 || data.length === 0) return;
             const dataset = datasetName.toLowerCase();
