@@ -25,7 +25,18 @@ module.exports = (app, db) => {
                     returns: 'A list of sunshine list entries specific to parameters'
                 },
                 sunshineCount: {
-                    endpoint: '/sunshine/count'
+                    endpoint: '/sunshine/count',
+                    description: 'Provides count of entries for given parameters. Supplements /sunshine/list.',
+                    methods: ['GET'],
+                    parameters: {
+                        limit: 'integer - number of entries to return - optional (ignored for count), default: 10',
+                        start: 'integer - number of entries to skip before return limit entries - optional (ignored for count), default: 0',
+                        filter: 'object - filters to apply to query - optional, default: no filter',
+                        search: 'string - quick search to tokenize and filter entries with - optional, default: none',
+                        sortField: 'string - field to use for sorting - optional (ignored for count), default: "year"',
+                        sortOrder: '"ascending" | "descending" - order of entries to sort - optional (ignored for count), default: "descending"'
+                    },
+                    returns: 'Total count of entries for the specified parameters'
                 }
             }
         })
