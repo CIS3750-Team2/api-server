@@ -67,21 +67,14 @@ module.exports = async (mongoUri) => {
 
     const getCursor = ({ search = '', ...query }) => (
         search.length === 0
-            ? collection
-                .find(toMongoQuery(query))
-                .sort(toMongoSort(query))
-            : collection
-                .find({
-                    ...toMongoQuery(query),
-                    $text: {
-                        $search: search,
-                        $caseSensitive: false
-                    }
-                }, { projection: { score: { $meta: 'textScore' } } })
-                .sort({
-                    score: { $meta: 'textScore' },
-                    ...toMongoSort(query)
-                })
+            ? collection.find(toMongoQuery(query))
+            : collection.find({
+                ...toMongoQuery(query),
+                $text: {
+                    $search: search,
+                    $caseSensitive: false
+                }
+            }, { projection: { score: { $meta: 'textScore' } } })
     );
 
     return {
@@ -89,7 +82,22 @@ module.exports = async (mongoUri) => {
         db,
         collection,
         getList: async ({ start, limit, ...query }) => {
-            const list = await getCursor(query).skip(start).limit(limit).toArray();
+            const list = await (
+                !query.search || query.search.length === 0
+                    ? getCursor(query)
+                        .sort(toMongoSort(query))
+                        .skip(start)
+                        .limit(limit)
+                        .toArray()
+                    : getCursor(query)
+                        .sort({
+                            score: { $meta: 'textScore' },
+                            ...toMongoSort(query)
+                        })
+                        .skip(start)
+                        .limit(limit)
+                        .toArray()
+            );
 
             return list.map((entry) => ({
                 ...entry,

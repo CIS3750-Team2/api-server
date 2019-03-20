@@ -65,6 +65,7 @@ module.exports = (app, db) => {
             const result = await db.getList(query);
             res.status(200).json(result);
         } catch (err) {
+            console.error('An error occurred while accessing list route!');
             console.log(err);
             res.status(500).json({
                 error: process.env.NODE_ENV === 'development' ? err : 'Internal Server Error',
@@ -80,6 +81,7 @@ module.exports = (app, db) => {
             const count = await db.getCount(query);
             res.status(200).json(count);
         } catch (err) {
+            console.error('An error occurred while accessing count route!');
             console.log(err);
             res.status(500).json({
                 error: process.env.NODE_ENV === 'development' ? err : 'Internal Server Error',
