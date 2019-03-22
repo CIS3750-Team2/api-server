@@ -98,29 +98,14 @@ module.exports = (app, db) => {
         const query = queryFromReq(req);
 
         // headers - array of strings
-        const headersToCSV = (headers) => {
-            var line = '';
-            for (header of headers) {
-                line += '"' + header.toString() + '",';
-            }
-            line += '\n';
-            return line;
-        }
+        const headersToCSV = (headers) =>
+            `${headers.map((s) => `"${s}"`).join(',')}\n`;
 
         // entry - an object from database to convert to a CSV line
         // headers - array of headers
-        const entryToCSV = (entry, headers) => {
-            var line = '';
-            for (header of headers) {
-                if (entry[header] === undefined) {
-                    line += ',"",';
-                } else {
-                    line += ('"' + entry[header].toString() + '",');
-                }
-            }
-            line += '\n';
-            return line;
-        }
+        const entryToCSV = (entry, headers) => headers
+            .map((header) => entry[header] ? `"${entry[header].toString()}"` : '""')
+            .join(',') + '\n';
 
         try {
             const cursor = await db.getCursor(query);
