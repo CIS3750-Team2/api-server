@@ -1,4 +1,3 @@
-
 const defaultQuery = {
     limit: 10,
     start: 0,
@@ -126,6 +125,7 @@ module.exports = (app, db) => {
         try {
             const cursor = await db.getCursor(query);
             const csvHeaders = db.getFields();
+            cursor.limit(0);
             res.setHeader('Content-disposition', 'attachment; filename=SundialExport.csv');
             res.setHeader('Content-Type', 'text/csv');
             res.write(headersToCSV(csvHeaders));
