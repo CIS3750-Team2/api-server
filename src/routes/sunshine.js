@@ -94,8 +94,55 @@ module.exports = (app, db) => {
         res.status(200).json(db.getFields());
     };
 
+    const exportHandler = async (req, res) => {
+        const query = queryFromReq(req);
+
+        // headers - array of strings
+        const headersToCSV = (headers) => {
+            var line = '';
+            for (header of headers) {
+                line += '"' + header.toString() + '",';
+            }
+            line += '\n';
+            return line;
+        }
+
+        // entry - an object from database to convert to a CSV line
+        // headers - array of headers
+        const entryToCSV = (entry, headers) => {
+            var line = '';
+            for (header of headers) {
+                if (entry[header] === undefined) {
+                    line += ',"",';
+                } else {
+                    line += ('"' + entry[header].toString() + '",');
+                }
+            }
+            line += '\n';
+            return line;
+        }
+
+        try {
+            const cursor = await db.getCursor(query);
+            const csvHeaders = db.getFields();
+            cursor.limit(0);
+            res.setHeader('Content-disposition', 'attachment; filename=SundialExport.csv');
+            res.setHeader('Content-Type', 'text/csv');
+            res.write(headersToCSV(csvHeaders));
+            while (await cursor.hasNext()) {
+                const entry = await cursor.next();
+                res.write(entryToCSV(entry, csvHeaders));
+            }
+        } catch (err) {
+            console.error('An error occurred while accessing export route!');
+            console.log(err);
+        }
+        res.end();
+    };
+
     app.get('/sunshine/list', listHandler);
     app.get('/sunshine/count', countHandler);
     app.get('/sunshine/fields', fieldsHandler);
+    app.get('/sunshine/export', exportHandler);
     app.get('/sunshine', listHandler);
 };
