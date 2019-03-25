@@ -125,9 +125,33 @@ module.exports = (app, db) => {
         res.end();
     };
 
+    const plotHandler = async (req, res) => {
+        const {yField = '', yMethod = '', xField = ''} = req.params;
+        const query = queryFromReq(req);
+
+        try {
+            if (yField.length === 0 || xField.length === 0 || !db.plotMethods.includes(yMethod)) {
+                res.status(200).json({
+                    error: 'Invalid params or query, check documentation on /.'
+                });
+            } else {
+                const plot = await db.getPlot(yField, xField, yMethod, query);
+                res.status(200).json(plot);
+            }
+        } catch (err) {
+            console.error('An error occurred while accessing stats route!');
+            console.log(err);
+            res.status(500).json({
+                error: process.env.NODE_ENV === 'development' ? err : 'Internal Server Error',
+                message: 'An error was encountered while trying to load the specified plot of provincial data. Please try again.'
+            });
+        }
+    };
+
     app.get('/sunshine/list', listHandler);
     app.get('/sunshine/count', countHandler);
     app.get('/sunshine/fields', fieldsHandler);
     app.get('/sunshine/export', exportHandler);
+    app.get('/sunshine/plot/:yField/:yMethod/vs/:xField', plotHandler);
     app.get('/sunshine', listHandler);
 };

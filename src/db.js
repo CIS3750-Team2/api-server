@@ -65,6 +65,8 @@ module.exports = async (mongoUri) => {
     const collection = db.collection(collectionName);
     await collection.createIndex({ "$**": "text" });
 
+    const plotMethods = ['mean', 'median', 'mode', 'std', 'var'];
+
     const getCursor = ({ search = '', ...query }) => (
         search.length === 0
             ? collection.find(toMongoQuery(query))
@@ -80,6 +82,7 @@ module.exports = async (mongoUri) => {
     return {
         mongoUri,
         db,
+        plotMethods,
         collection,
         getCursor,
         getFields: () => [
@@ -134,6 +137,9 @@ module.exports = async (mongoUri) => {
                     }
                 }))
             ], { ordered: true });
+        },
+        getPlot: async (yField, xField, method, query) => {
+            return [];
         }
     };
 };
