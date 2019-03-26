@@ -111,11 +111,23 @@ module.exports = async (mongoUri) => {
                         .toArray()
             );
 
-            return list.map((entry) => ({
-                ...entry,
-                dataset: undefined,
-                score: undefined
-            }));
+            return list.map((entry) => {
+                let {salary, taxableBenefits} = entry;
+                if (salary && typeof salary === 'string') {
+                    salary = parseFloat(salary.replace(/[$,]+/g, ''));
+                }
+                if (taxableBenefits && typeof taxableBenefits === 'string') {
+                    taxableBenefits = parseFloat(taxableBenefits.replace(/[$,]+/g, ''));
+                }
+
+                return {
+                    ...entry,
+                    salary,
+                    taxableBenefits,
+                    dataset: undefined,
+                    score: undefined
+                };
+            });
         },
         getCount: async (query) => await getCursor(query).count(),
         addData: async (datasetName, data = []) => {
@@ -139,6 +151,8 @@ module.exports = async (mongoUri) => {
             ], { ordered: true });
         },
         getPlot: async (yField, xField, method, query) => {
+            const cursor = await getCursor(query);
+
             return [];
         }
     };
