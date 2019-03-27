@@ -43,7 +43,7 @@ module.exports = (app, db) => {
                 },
                 sunshinePlot: {
                     endpoint: '/sunshine/plot/:dependentField/:dependentMethod/vs/:independentField',
-                    description: 'Provides a list of points to be plotted based on the given fields and method.',
+                    description: 'Provides a list of points to be plotted based on the given fields and method.\nMethods include: "avg", "max", "min", "std", "sum", and "count".',
                     methods: ['GET'],
                     parameters: {
                        filter: 'object - filters to apply to query - optional, default: no filter',

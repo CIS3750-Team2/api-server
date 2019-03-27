@@ -9,6 +9,16 @@ const textFilterTypes = {
     not_matches: text => ({ $not: new RegExp(`^${text}$`, 'im') })
 };
 
+const plotMethodOp = {
+    avg: '$avg',
+    max: '$max',
+    min: '$min',
+    std: '$stdDevSamp',
+    sum: '$sum',
+    count: '$sum'
+};
+const plotMethods = Object.keys(plotMethodOp);
+
 const toMongoQuery = ({ filter }) => {
     const query = {};
 
@@ -64,8 +74,6 @@ module.exports = async (mongoUri) => {
     const db = (await MongoClient.connect(mongoUri, { useNewUrlParser: true })).db();
     const collection = db.collection(collectionName);
     await collection.createIndex({ "$**": "text" });
-
-    const plotMethods = ['mean', 'median', 'mode', 'std', 'var'];
 
     const getCursor = ({ search = '', ...query }) => (
         search.length === 0
@@ -170,9 +178,38 @@ module.exports = async (mongoUri) => {
                 pipeline.push({ $text: { $search: search, $caseSensitive: false } });
             }
 
-            const plots = await collection.aggregate(pipeline, {});
+            // ensure y-fields are correct type
+            pipeline.push({
+                $match: {
+                    $and: [
+                        { [yField]: { $type: 'number' } },
+                        { [yField]: { $ne: NaN } }
+                    ]
+                }
+            });
+            // add stats calculation to pipeline
+            pipeline.push({
+                $group: {
+                    _id: `$${xField}`,
+                    y: {
+                        [plotMethodOp[method]]: method === 'count' ? 1 : `$${yField}`
+                    }
+                }
+            });
+            // change _id to x
+            pipeline.push({
+                $project: {
+                    _id: false,
+                    x: '$_id',
+                    y: true
+                }
+            });
+            // sort final results by sort stage
+            pipeline.push({ $sort: { x: 1 } });
 
-            return plots;
+            return await collection.aggregate(pipeline, {
+                allowDiskUse: true
+            }).toArray();
         }
     };
 };
