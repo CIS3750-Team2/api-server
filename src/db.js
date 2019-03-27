@@ -140,20 +140,39 @@ module.exports = async (mongoUri) => {
                         filter: { dataset }
                     }
                 },
-                ...data.map((entry) => ({
-                    insertOne: {
-                        document: {
-                            ...entry,
-                            dataset
-                        }
+                ...data.map(({ salary, taxableBenefits, ...entry }) => {
+                    if (salary && typeof salary === 'string') {
+                        salary = parseFloat(salary.replace(/[$,]+/g, ''));
                     }
-                }))
+                    if (taxableBenefits && typeof taxableBenefits === 'string') {
+                        taxableBenefits = parseFloat(taxableBenefits.replace(/[$,]+/g, ''));
+                    }
+
+                    return {
+                        insertOne: {
+                            document: {
+                                ...entry,
+                                salary,
+                                taxableBenefits,
+                                dataset
+                            }
+                        }
+                    };
+                })
             ], { ordered: true });
         },
         getPlot: async (yField, xField, method, query) => {
-            const cursor = await getCursor(query);
+            const pipeline = [];
+            if (query.filter) {
+                pipeline.push({ $match: toMongoQuery(query) });
+            }
+            if (query.search && query.search.length > 0) {
+                pipeline.push({ $text: { $search: search, $caseSensitive: false } });
+            }
 
-            return [];
+            const plots = await collection.aggregate(pipeline, {});
+
+            return plots;
         }
     };
 };
